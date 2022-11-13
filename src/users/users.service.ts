@@ -19,9 +19,16 @@ export class UsersService {
     };
   }
 
-  async findOne(username: string): Promise<any> {
+  async findOne(username: string){
     const user = await this.UserModel.findOne({username: username});
     return user
+  }
+
+  async findUserPosts(username: string){
+    console.log(username);
+    
+    const user = await this.UserModel.findOne({username: username}).populate('posts');
+    return user.posts
   }
   async userCreation(userCreateData: createUserDto){
     const {username, password} = userCreateData
