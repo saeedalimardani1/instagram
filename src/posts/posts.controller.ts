@@ -45,8 +45,8 @@ export class PostsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  findOne(@Request() req ,@Param('id') id: string) {
+    return this.postsService.findOnePost(req.user.username, id);
   }
 
   @Patch(':id')

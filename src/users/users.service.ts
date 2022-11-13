@@ -24,11 +24,18 @@ export class UsersService {
     return user
   }
 
-  async findUserPosts(username: string){
-    console.log(username);
-    
-    const user = await this.UserModel.findOne({username: username}).populate('posts');
-    return user.posts
+  async findUserPosts(username: string, id? : string){
+    if(id){
+      console.log(id);
+      
+      const user = await this.UserModel.findOne({username: username}).populate({
+        path: 'posts',
+        match: { _id: id },
+      })
+      return user.posts
+    }
+    const users = await this.UserModel.findOne({username: username}).populate('posts');
+    return users.posts
   }
   async userCreation(userCreateData: createUserDto){
     const {username, password} = userCreateData

@@ -30,8 +30,9 @@ export class PostsService {
     return userPosts
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOnePost(username: string, id: string) {
+    const userPost = await this.usersService.findUserPosts(username, id)    
+    return userPost
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
