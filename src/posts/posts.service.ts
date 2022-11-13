@@ -35,11 +35,93 @@ export class PostsService {
     return userPost
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(userId: string, id: string, updatePostDto: UpdatePostDto) {
+    const postOld = await this.postModel.findOne({_id: id, author: userId})
+    console.log(postOld);
+    try {
+      console.log(updatePostDto);
+      
+      const updatedPost = await this.postModel.updateOne(
+        {
+          _id: id,
+          author : userId
+        },
+        {
+          $set: {
+            'title':
+                updatePostDto.title !== undefined
+                  ? updatePostDto.title
+                  : postOld.title,
+            'description':
+                updatePostDto.description !== undefined
+                  ? updatePostDto.description
+                  : postOld.description,
+          }, 
+          $push: {
+            'tags':
+            updatePostDto.tags !== undefined
+              ? updatePostDto.tags
+              : undefined,
+          },
+          $pull: {
+            'tags':
+            updatePostDto.deletetags !== undefined
+              ? updatePostDto.deletetags
+              : undefined,
+          }
+      })
+      
+      return updatedPost
+    } catch (error) {
+      throw new Error(error.message)
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: string, userId: string) {
+    try {
+      await this.postModel.deleteOne({_id: id, author: userId})
+      return `post with ${id} has been deleted`
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async postLike(id: string, userId: string) {
+   
+   try {
+     const post = await this.postModel.updateOne(
+       {_id: id},
+       {
+         $push: {
+           'likes': userId
+         },
+       }
+     )
+     return 'ok'
+    
+   } catch (error) {
+    throw new Error(error.message)
+   }
+  }
+
+  async postUnlike(id: string, userId: string) {
+    try {
+      const post = await this.postModel.updateOne(
+         {_id: id},
+         {
+           $pull: {
+             'likes': userId
+           },
+         }
+       )
+       return `ok`
+     
+    } catch (error) {
+     throw new Error(error.message)
+    }
+  }
+
+  async findPost(id: string) :Promise<UpdatePostDto>{
+    return await this.postModel.findOne({_id: id})
   }
 }

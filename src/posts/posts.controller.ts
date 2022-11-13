@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFile, Put } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -7,6 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { get } from 'http';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
@@ -49,13 +50,33 @@ export class PostsController {
     return this.postsService.findOnePost(req.user.username, id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
+  
+  @Put(':id')
+  update(@Body() updatePostDto: UpdatePostDto, @Request() req, @Param('id') id: string) {
+    console.log(updatePostDto);
+    
+    return this.postsService.update(req.user.userId, id, updatePostDto);
+  }
+  
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.postsService.remove(id, req.user.userId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  @Put('like/:id')
+  postLike(@Request() req ,@Param('id') id: string) {
+    return this.postsService.postLike(id, req.user.userId);
   }
+
+  @Put('unlike/:id')
+  postUnlike(@Request() req ,@Param('id') id: string) {
+    return this.postsService.postUnlike(id, req.user.userId);
+  }
+
+  @Get('likes/:id')
+  async postLikesNumber(@Param('id') id: string) {
+    const post = await  this.postsService.findPost(id);
+    return post.likes.length
+  }
+
 }
