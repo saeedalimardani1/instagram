@@ -21,8 +21,17 @@ export class UsersService {
     };
   }
 
-  async findOne(username: string){
-    const user = await this.UserModel.findOne({username: username});
+  async findOne(userId: string, id?:string){
+    if(id){
+      const user = await this.UserModel.findOne({_id: id})
+      if(user.status == 'Private'){
+        if(!user.followers.includes(userId)){          
+          return await this.UserModel.findOne({_id: id}, 'username nickname description photo')
+        }
+        return await this.UserModel.findOne({_id: id},'username nickname description photo').populate('posts')
+      }
+    }
+    const user = await this.UserModel.findOne({_id: userId},'username nickname description photo');
     return user
   }
 

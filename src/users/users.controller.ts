@@ -13,9 +13,14 @@ export class UsersController {
     constructor(private readonly userService: UsersService){}
     
     @Get()
-     getProfile(@Request() req) {
-      return this.userService.findOne(req.user.username)
-    }
+    getUserProfile(@Request() req) {
+      return this.userService.findOne(req.user.userId)
+    }  
+
+    @Get(':id')
+     getProfile(@Request() req, @Param('id') id? : string) {
+      return this.userService.findOne(req.user.userId, id)
+    }  
 
     @UseInterceptors(
       FileInterceptor('file', {
