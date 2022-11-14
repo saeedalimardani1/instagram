@@ -80,4 +80,135 @@ export class UsersService {
       throw new Error(error.message)
     }
   }
+
+  async follow(userId: string , id: string){
+    try {
+      const userToFollow = await this.UserModel.findOne({_id: id})
+      const user = await this.UserModel.findOne({_id: userId})
+      console.log(user, userToFollow);
+      
+      if(user && userToFollow){
+        if(userToFollow.status == 'Public'){
+          userToFollow.followers.push(userId)
+          user.following.push(id)
+          await userToFollow.save()
+          await user.save()
+          return `you are following ${id}`
+        }
+        else{
+          userToFollow.followRequests.push(userId)
+          user.followingRequests.push(id)
+          await userToFollow.save()
+          await user.save()
+          return `request sent to user with ${id} id`
+        }
+      } return 'no such user'
+      
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+  async unfollow(userId: string , id: string){
+    try {
+      const userToUnfollow = await this.UserModel.updateOne(
+        {_id: id},
+        {
+          $pull: {
+            'followers': userId
+          }
+        }
+        )
+      const user = await this.UserModel.updateOne(
+        {_id: userId},
+        {
+          $pull: {
+            'following': id
+          }
+        }
+        )
+      return user
+
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async blockFollower(userId: string , id: string){
+    try {
+      const userToBlock = await this.UserModel.updateOne(
+        {_id: id},
+        {
+          $pull: {
+            'following': userId
+          }
+        }
+        )
+      const user = await this.UserModel.updateOne(
+        {_id: userId},
+        {
+          $pull: {
+            'followers': id
+          }
+        }
+        )
+      return user
+
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async followAccept(userId: string, id: string){
+    try {
+      const updatedUserFollowers = await this.UserModel.updateOne(
+        {_id: userId},
+        {
+          $pull: {
+            'followRequests': id
+          },
+          $push: {
+            'followers': id
+          }
+        }
+      )
+      await this.UserModel.updateOne(
+        {_id: id},
+        {
+          $pull: {
+            'followingRequests': userId
+          },
+          $push: {
+            'following': userId
+          }
+        }
+      )
+      return updatedUserFollowers
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async followDecline(userId: string, id: string){
+    try {
+      const updatedUserFollowers = await this.UserModel.updateOne(
+        {_id: userId},
+        {
+          $pull: {
+            'followRequests': id
+          }
+        }
+      )
+      await this.UserModel.updateOne(
+        {_id: id},
+        {
+          $pull: {
+            'followingRequests': userId
+          }
+        }
+      )
+      return updatedUserFollowers
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
 }

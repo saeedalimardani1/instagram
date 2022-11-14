@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, UseGuards, Request, Put, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, UseGuards, Request, Put, UseInterceptors, UploadedFile, Param } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
@@ -42,5 +42,26 @@ export class UsersController {
     update(@Body() updateUserdto: UpdateUserDto, @Request() req, @UploadedFile() file: Express.Multer.File) {
      
       return this.userService.update(req.user.userId, updateUserdto , file);
+    }
+
+    @Post('follow/:id')
+    follow(@Request() req, @Param('id') id: string){
+      return this.userService.follow(req.user.userId, id)
+    }
+    @Post('unfollow/:id')
+    unfollow(@Request() req, @Param('id') id: string){
+      return this.userService.unfollow(req.user.userId, id)
+    }
+    @Post('block/:id')
+    blockFollower(@Request() req, @Param('id') id: string){
+      return this.userService.blockFollower(req.user.userId, id)
+    }
+    @Put('follow/accept/:id')
+    followAccept(@Request() req, @Param('id') id: string){
+      return this.userService.followAccept(req.user.userId, id)
+    }
+    @Put('follow/decline/:id')
+    followDecline(@Request() req, @Param('id') id: string){
+      return this.userService.followDecline(req.user.userId, id)
     }
 }
