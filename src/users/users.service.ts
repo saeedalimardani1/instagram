@@ -211,4 +211,14 @@ export class UsersService {
       throw new Error(error.message)
     }
   }
+
+  async getPostsOfFollowing(userId: string){
+    const user =  await this.UserModel.findOne({_id: userId}).select('username -_id').populate({
+      path: 'following',
+      select: 'posts -_id',
+      populate: { path: 'posts',perDocumentLimit: 2 }
+    })
+    let posts = user.following.map((obj) => {return obj.posts} )
+    return posts
+  }
 }

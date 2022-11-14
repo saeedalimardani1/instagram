@@ -8,6 +8,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { get } from 'http';
+import { REQUEST } from '@nestjs/core';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
@@ -39,12 +40,18 @@ export class PostsController {
   create(@Body() createPostDto: CreatePostDto, @Request() req, @UploadedFile() file: Express.Multer.File,) {
     return this.postsService.create(createPostDto, req.user, file);
   }
-
+  
   @Get()
   findAll(@Request() req) {
     return this.postsService.findAll(req.user.username);
   }
-
+  @Get('/home')
+  getPostsOfFollowing(@Request() req){
+    console.log(req, 'salam');
+    
+    return this.postsService.getPostsOfFollowing(req.user.userId)
+  }
+  
   @Get(':id')
   findOne(@Request() req ,@Param('id') id: string) {
     return this.postsService.findOnePost(req.user.username, id);
@@ -78,5 +85,6 @@ export class PostsController {
     const post = await  this.postsService.findPost(id);
     return post.likes.length
   }
+
 
 }

@@ -122,4 +122,10 @@ export class PostsService {
   async findPost(id: string) :Promise<UpdatePostDto>{
     return await this.postModel.findOne({_id: id})
   }
+
+  async getPostsOfFollowing(userId: string){
+    console.log(userId, 'salammmmmmmmmssssssssss');
+    
+    return this.usersService.getPostsOfFollowing(userId)
+  }
 }

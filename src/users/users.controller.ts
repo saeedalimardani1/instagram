@@ -40,7 +40,6 @@ export class UsersController {
     )
     @Put()
     update(@Body() updateUserdto: UpdateUserDto, @Request() req, @UploadedFile() file: Express.Multer.File) {
-     
       return this.userService.update(req.user.userId, updateUserdto , file);
     }
 
@@ -48,20 +47,25 @@ export class UsersController {
     follow(@Request() req, @Param('id') id: string){
       return this.userService.follow(req.user.userId, id)
     }
+
     @Post('unfollow/:id')
     unfollow(@Request() req, @Param('id') id: string){
       return this.userService.unfollow(req.user.userId, id)
     }
+
     @Post('block/:id')
     blockFollower(@Request() req, @Param('id') id: string){
       return this.userService.blockFollower(req.user.userId, id)
     }
+    
     @Put('follow/accept/:id')
     followAccept(@Request() req, @Param('id') id: string){
       return this.userService.followAccept(req.user.userId, id)
     }
+
     @Put('follow/decline/:id')
     followDecline(@Request() req, @Param('id') id: string){
       return this.userService.followDecline(req.user.userId, id)
     }
+
 }
