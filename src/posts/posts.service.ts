@@ -123,9 +123,72 @@ export class PostsService {
     return await this.postModel.findOne({_id: id})
   }
 
-  async getPostsOfFollowing(userId: string){
-    console.log(userId, 'salammmmmmmmmssssssssss');
-    
+  async getPostsOfFollowing(userId: string){    
     return this.usersService.getPostsOfFollowing(userId)
+  }
+
+  //comments .........................................
+  async getCommentsOfPost(id: string, userId: string){
+    const user = await this.usersService.findOne(userId)
+    const post = await this.postModel.findOne({_id: id}).populate('author')
+    if(post.author.status == "Private" && JSON.stringify(post.author._id) !== JSON.stringify(userId)){
+      if(user.following.includes(post.author._id)){
+        return post.comments
+      }
+      else{
+        return 'you dont have access to this post'
+      }
+    }
+    else{
+      return post.comments
+    }
+  }
+
+  async createCommentForPost(id: string, text: string, userId: string){
+    const user = await this.usersService.findOne(userId)
+    const post = await this.postModel.findOne({_id: id}).populate('author')
+    if(post.author.status == "Private" && JSON.stringify(post.author._id) !== JSON.stringify(userId)){
+      if(user.following == undefined || !user.following.includes(post.author._id) ){
+        return 'you dont have access to this post' 
+      }
+    }
+    
+    return await this.postModel.updateOne(
+      {_id: id},
+      {
+        $push: {
+          'comments': {author: userId, text}
+        }
+      }
+    )
+  }
+
+  async deleteCommentOfPosts(id: string,commentId: string, userId: string){
+    try {
+      const post = await this.postModel.findOne({_id: id})
+      console.log(post);
+      
+      if(post.author._id &&  JSON.stringify(post.author._id) == JSON.stringify(userId)){
+        return await this.postModel.updateOne(
+          {_id: id},
+          {
+            $pull: {
+              'comments': { _id: commentId}
+            }
+          }
+        )
+      }
+      return await this.postModel.updateOne(
+        {_id: id},
+        {
+          $pull: {
+            'comments': {author: userId, _id: commentId}
+          }
+        }
+      )
+      
+    } catch (error) {
+      throw new Error(error.message)
+    }
   }
 }

@@ -31,7 +31,7 @@ export class UsersService {
         return await this.UserModel.findOne({_id: id},'username nickname description photo').populate('posts')
       }
     }
-    const user = await this.UserModel.findOne({_id: userId},'username nickname description photo');
+    const user = await this.UserModel.findOne({_id: userId});
     return user
   }
 

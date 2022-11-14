@@ -70,6 +70,7 @@ export class PostsController {
     return this.postsService.remove(id, req.user.userId);
   }
 
+  //Likes ..................................................
   @Put('like/:id')
   postLike(@Request() req ,@Param('id') id: string) {
     return this.postsService.postLike(id, req.user.userId);
@@ -86,5 +87,17 @@ export class PostsController {
     return post.likes.length
   }
 
-
+  //comments ............................................
+  @Get('comment/:id')
+  getCommentsOfPost(@Param('id') id: string, @Request() req){
+    return this.postsService.getCommentsOfPost(id, req.user.userId)
+  }
+  @Post('comment/:id')
+  createCommentForPost(@Param('id') id: string, @Request() req, @Body('text') text: string){
+    return this.postsService.createCommentForPost(id, text, req.user.userId)
+  }
+  @Delete('comment/:id/:commentId')
+  deleteCommentOfPost(@Param() param, @Request() req){
+    return this.postsService.deleteCommentOfPosts(param.id, param.commentId, req.user.userId )
+  }
 }
