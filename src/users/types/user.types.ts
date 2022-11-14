@@ -9,4 +9,5 @@ export class UserData {
     id: string;
     username: string;
     password?: string;
+    posts?: string;
   }

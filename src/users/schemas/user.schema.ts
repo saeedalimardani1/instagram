@@ -21,6 +21,16 @@ export const UserSchema = new mongoose.Schema({
         default: 'Public'
     },
     
+    followRequests: [{
+      type: mongoose.SchemaTypes.ObjectId,
+      ref:'User'
+    }],
+
+    followingRequests: [{
+      type: mongoose.SchemaTypes.ObjectId,
+      ref:'User'
+    }],
+
     savedPosts: [{
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'Post'
