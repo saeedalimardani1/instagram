@@ -15,8 +15,6 @@ export class PostsService {
       const PostWithImgAndAuthor = { ...createPostDto }
       PostWithImgAndAuthor["photo"] = file.path
       PostWithImgAndAuthor["author"] = user.userId
-      console.log(PostWithImgAndAuthor);
-      
       const post = await this.postModel.create(PostWithImgAndAuthor)
       return post
     } catch (error) {
