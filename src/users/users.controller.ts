@@ -12,6 +12,7 @@ import { UsersService } from './users.service';
 export class UsersController {
     constructor(private readonly userService: UsersService){}
     
+    //user profile get and update..............................
     @Get()
     getUserProfile(@Request() req) {
       return this.userService.findOne(req.user.userId)
@@ -48,6 +49,7 @@ export class UsersController {
       return this.userService.update(req.user.userId, updateUserdto , file);
     }
 
+    //follow and unfollow ....................................
     @Post('follow/:id')
     follow(@Request() req, @Param('id') id: string){
       return this.userService.follow(req.user.userId, id)
@@ -72,5 +74,7 @@ export class UsersController {
     followDecline(@Request() req, @Param('id') id: string){
       return this.userService.followDecline(req.user.userId, id)
     }
+
+    
 
 }

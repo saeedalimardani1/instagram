@@ -191,4 +191,33 @@ export class PostsService {
       throw new Error(error.message)
     }
   }
+
+  //saving post for one user.........................
+  async savePost(postId: string, userId: string){
+    try {
+      const post = await this.postModel.findOne({_id:postId}).populate('author')
+      if(post){
+        if(post.author.status == 'Private'){
+          if(!post.author.followers.includes(userId)){
+            return 'be in post dastresi nadari'
+          }
+        }
+        return this.usersService.savePostForUser(postId, userId)
+      }
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async unsavePost(postId: string, userId: string){
+    try {
+      const post = await this.findPost(postId)
+      if(post){
+        return this.usersService.unsavePostForUser(postId, userId)
+      }
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+  
 }

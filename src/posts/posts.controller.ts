@@ -15,6 +15,7 @@ import { REQUEST } from '@nestjs/core';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
+  //user post crud ............................................................
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
@@ -45,7 +46,8 @@ export class PostsController {
   findAll(@Request() req) {
     return this.postsService.findAll(req.user.username);
   }
-  @Get('/home')
+  //home page to get the posts of following users............
+  @Get('home')
   getPostsOfFollowing(@Request() req){
     console.log(req, 'salam');
     
@@ -69,6 +71,7 @@ export class PostsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.postsService.remove(id, req.user.userId);
   }
+
 
   //Likes ..................................................
   @Put('like/:id')
@@ -99,5 +102,15 @@ export class PostsController {
   @Delete('comment/:id/:commentId')
   deleteCommentOfPost(@Param() param, @Request() req){
     return this.postsService.deleteCommentOfPosts(param.id, param.commentId, req.user.userId )
+  }
+
+  //saving favorite post ....................................
+  @Post('save/:id')
+  savePost(@Param('id') id: string, @Request() req){
+    return this.postsService.savePost(id, req.user.userId)
+  }
+  @Post('unsave/:id')
+  unsavePost(@Param('id') id: string, @Request() req){
+    return this.postsService.unsavePost(id, req.user.userId)
   }
 }
