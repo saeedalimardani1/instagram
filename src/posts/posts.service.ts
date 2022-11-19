@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UsersService } from 'src/users/users.service';
@@ -26,6 +26,14 @@ export class PostsService {
   async findAll(username: string) {
     const userPosts = await this.usersService.findUserPosts(username)    
     return userPosts
+  }
+  async findPost( userId: string, id: string) {
+    const post = await this.postModel.findOne({_id: id})
+    this.usersService.userAccess(userId, post.author._id)
+    if(await this.usersService.userAccess(userId, post.author._id)){           
+      return post
+    }
+    throw new HttpException('be in post dastresi nadari', HttpStatus.FORBIDDEN);
   }
 
   async findOnePost(username: string, id: string) {
@@ -87,15 +95,21 @@ export class PostsService {
   async postLike(id: string, userId: string) {
    
    try {
-     const post = await this.postModel.updateOne(
-       {_id: id},
-       {
-         $push: {
-           'likes': userId
-         },
-       }
-     )
-     return 'ok'
+      const post = await this.postModel.findOne({_id: id})
+      if(await this.usersService.userAccess(userId, post.author._id)){
+        await this.postModel.updateOne(
+        {_id: id},
+        {
+          $push: {
+            'likes': userId
+          },
+        }
+        )
+        return 'ok'
+      }
+      else{
+        throw new HttpException('be in post dastresi nadari', HttpStatus.FORBIDDEN);
+      }
     
    } catch (error) {
     throw new Error(error.message)
@@ -104,6 +118,7 @@ export class PostsService {
 
   async postUnlike(id: string, userId: string) {
     try {
+      
       const post = await this.postModel.updateOne(
          {_id: id},
          {
@@ -119,9 +134,6 @@ export class PostsService {
     }
   }
 
-  async findPost(id: string) :Promise<UpdatePostDto>{
-    return await this.postModel.findOne({_id: id})
-  }
 
   async getPostsOfFollowing(userId: string){    
     return this.usersService.getPostsOfFollowing(userId)
@@ -131,44 +143,38 @@ export class PostsService {
   async getCommentsOfPost(id: string, userId: string){
     const user = await this.usersService.findOne(userId)
     const post = await this.postModel.findOne({_id: id}).populate('author')
-    if(post.author.status == "Private" && JSON.stringify(post.author._id) !== JSON.stringify(userId)){
-      if(user.following.includes(post.author._id)){
-        return post.comments
-      }
-      else{
-        return 'you dont have access to this post'
-      }
+    if(await this.usersService.userAccess(userId, post.author._id)){
+      return post.comments
     }
     else{
-      return post.comments
+      throw new HttpException('be in post dastresi nadari', HttpStatus.FORBIDDEN);
     }
   }
 
   async createCommentForPost(id: string, text: string, userId: string){
+    
     const user = await this.usersService.findOne(userId)
     const post = await this.postModel.findOne({_id: id}).populate('author')
-    if(post.author.status == "Private" && JSON.stringify(post.author._id) !== JSON.stringify(userId)){
-      if(user.following == undefined || !user.following.includes(post.author._id) ){
-        return 'you dont have access to this post' 
-      }
-    }
-    
-    return await this.postModel.updateOne(
-      {_id: id},
-      {
-        $push: {
-          'comments': {author: userId, text}
+    if(await this.usersService.userAccess(userId, post.author._id)){
+      return await this.postModel.updateOne(
+        {_id: id},
+        {
+          $push: {
+            'comments': {author: userId, text}
+          }
         }
-      }
-    )
+      )
+    }
+    else{
+      throw new HttpException('be in post dastresi nadari', HttpStatus.FORBIDDEN);
+    }
   }
 
   async deleteCommentOfPosts(id: string,commentId: string, userId: string){
     try {
       const post = await this.postModel.findOne({_id: id})
-      console.log(post);
       
-      if(post.author._id &&  JSON.stringify(post.author._id) == JSON.stringify(userId)){
+      if(await this.usersService.userAccess(userId, post.author._id)){
         return await this.postModel.updateOne(
           {_id: id},
           {
@@ -191,4 +197,33 @@ export class PostsService {
       throw new Error(error.message)
     }
   }
+
+  //saving post for one user.........................
+  async savePost(postId: string, userId: string){
+    try {
+      const post = await this.postModel.findOne({_id:postId}).populate('author')
+      if(post){
+        if(post.author.status == 'Private'){
+          if(!post.author.followers.includes(userId)){
+            return 'be in post dastresi nadari'
+          }
+        }
+        return this.usersService.savePostForUser(postId, userId)
+      }
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  async unsavePost(postId: string, userId: string){
+    try {
+      const post = await this.findPost(userId, postId)
+      if(post){
+        return this.usersService.unsavePostForUser(postId, userId)
+      }
+    } catch (error) {
+      throw new Error(error.message)
+    }
+  }
+  
 }

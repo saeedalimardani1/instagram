@@ -14,7 +14,6 @@ export const UserSchema = new mongoose.Schema({
     description: String,
     photo: String,
     age: Number,
-    stories: String,
     status: {
         type: String,
         enum: ['Public', 'Private'],
@@ -51,6 +50,12 @@ export const UserSchema = new mongoose.Schema({
 
   UserSchema.virtual('posts', {
     ref: 'Post',
+    localField: '_id',
+    foreignField: 'author'
+  })
+
+  UserSchema.virtual('stories', {
+    ref: 'Story',
     localField: '_id',
     foreignField: 'author'
   })

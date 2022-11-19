@@ -6,15 +6,13 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { get } from 'http';
-import { REQUEST } from '@nestjs/core';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
+  //user post crud ............................................................
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
@@ -45,7 +43,8 @@ export class PostsController {
   findAll(@Request() req) {
     return this.postsService.findAll(req.user.username);
   }
-  @Get('/home')
+  //home page to get the posts of following users............
+  @Get('home')
   getPostsOfFollowing(@Request() req){
     console.log(req, 'salam');
     
@@ -54,7 +53,7 @@ export class PostsController {
   
   @Get(':id')
   findOne(@Request() req ,@Param('id') id: string) {
-    return this.postsService.findOnePost(req.user.username, id);
+    return this.postsService.findPost(req.user.userId, id);
   }
 
   
@@ -70,6 +69,7 @@ export class PostsController {
     return this.postsService.remove(id, req.user.userId);
   }
 
+
   //Likes ..................................................
   @Put('like/:id')
   postLike(@Request() req ,@Param('id') id: string) {
@@ -82,9 +82,12 @@ export class PostsController {
   }
 
   @Get('likes/:id')
-  async postLikesNumber(@Param('id') id: string) {
-    const post = await  this.postsService.findPost(id);
-    return post.likes.length
+  async postLikesNumber(@Request() req , @Param('id') id: string) {
+    const post = await  this.postsService.findPost(req.user.userId, id);
+    if(post){
+      return post.likes.length
+    }
+    return 'be in post dastresi nadari'
   }
 
   //comments ............................................
@@ -99,5 +102,15 @@ export class PostsController {
   @Delete('comment/:id/:commentId')
   deleteCommentOfPost(@Param() param, @Request() req){
     return this.postsService.deleteCommentOfPosts(param.id, param.commentId, req.user.userId )
+  }
+
+  //saving favorite post ....................................
+  @Post('save/:id')
+  savePost(@Param('id') id: string, @Request() req){
+    return this.postsService.savePost(id, req.user.userId)
+  }
+  @Post('unsave/:id')
+  unsavePost(@Param('id') id: string, @Request() req){
+    return this.postsService.unsavePost(id, req.user.userId)
   }
 }

@@ -21,19 +21,37 @@ export class UsersService {
     };
   }
 
+  //login find user..........
+  async findUser(username: string){
+    return await this.UserModel.findOne({username})
+  }
+
+  async userAccess(userId: string, id: string){
+    const user = await this.UserModel.findOne({_id: id})
+    
+    if(user.status == 'Private'){
+      if(user.followers.includes(userId) || userId == id){ 
+        return true
+      }
+      else{
+        return false
+      }
+    }else{
+      return true
+    }
+  }
   async findOne(userId: string, id?:string){
     if(id){
-      const user = await this.UserModel.findOne({_id: id})
-      if(user.status == 'Private'){
-        if(!user.followers.includes(userId)){          
+        if(!this.userAccess(userId, id)){
           return await this.UserModel.findOne({_id: id}, 'username nickname description photo')
-        }
+        }  
         return await this.UserModel.findOne({_id: id},'username nickname description photo').populate('posts')
       }
-    }
     const user = await this.UserModel.findOne({_id: userId});
     return user
-  }
+    }
+
+
 
   async findUserPosts(username: string, id? : string){
     if(id){
@@ -47,6 +65,19 @@ export class UsersService {
     }
     const users = await this.UserModel.findOne({username: username}).populate('posts');
     return users.posts
+  }
+
+  async findUserStories(userId: string, id? : string){
+    if(id){
+      
+      const user = await this.UserModel.findOne({_id: userId}).populate({
+        path: 'stories',
+        match: { _id: id },
+      })
+      return user.stories
+    }
+    const users = await this.UserModel.findOne({_id: userId}).populate('stories');
+    return users.stories
   }
 
   async userCreation(userCreateData: createUserDto){
@@ -90,6 +121,7 @@ export class UsersService {
     }
   }
 
+  //follow and unfollow ..............................................
   async follow(userId: string , id: string){
     try {
       const userToFollow = await this.UserModel.findOne({_id: id})
@@ -109,7 +141,7 @@ export class UsersService {
           user.followingRequests.push(id)
           await userToFollow.save()
           await user.save()
-          return `request sent to user with ${id} id`
+          return `request sent to user with ${userToFollow.username} id`
         }
       } return 'no such user'
       
@@ -148,7 +180,7 @@ export class UsersService {
         {_id: id},
         {
           $pull: {
-            'following': userId
+            'following': userId,
           }
         }
         )
@@ -156,7 +188,7 @@ export class UsersService {
         {_id: userId},
         {
           $pull: {
-            'followers': id
+            'followers': id,
           }
         }
         )
@@ -221,6 +253,7 @@ export class UsersService {
     }
   }
 
+  //home page ....................................................
   async getPostsOfFollowing(userId: string){
     const user =  await this.UserModel.findOne({_id: userId}).select('username -_id').populate({
       path: 'following',
@@ -229,5 +262,44 @@ export class UsersService {
     })
     let posts = user.following.map((obj) => {return obj.posts} )
     return posts
+  }
+
+  async getStoriesOfFollowing(userId: string){
+    const user =  await this.UserModel.findOne({_id: userId}).select('username -_id').populate({
+      path: 'following',
+      select: 'stories -_id',
+      populate: { path: 'stories' }
+    })
+    let stories = user.following.map((obj) => {return obj.stories} )
+    return stories
+  }
+
+  //save and delete saved post for user............................
+  async savePostForUser(postId: string, userId: string){
+    const user = await this.UserModel.findOne({_id: userId}, 'savedPosts')
+    if(user.savedPosts.includes(postId)){
+      return 'ghablan save kardi'
+    }
+    const updateUser = await this.UserModel.updateOne(
+      {_id: userId},
+      {
+        $push: {
+          'savedPosts': postId
+        }
+      }
+    )
+    return updateUser
+  }
+
+  async unsavePostForUser(postId: string, userId: string){
+    const updateUser = await this.UserModel.updateOne(
+      {_id: userId},
+      {
+        $pull: {
+          'savedPosts': postId
+        }
+      }
+    )
+    return updateUser
   }
 }
