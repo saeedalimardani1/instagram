@@ -8,6 +8,7 @@ import { UsersService } from './users/users.service';
 import { UsersModule } from './users/users.module';
 import { UsersController } from './users/users.controller';
 import { PostsModule } from './posts/posts.module';
+import { StoriesModule } from './stories/stories.module';
 @Module({
   imports: [ ConfigModule.forRoot({
     isGlobal: true,
@@ -16,6 +17,7 @@ import { PostsModule } from './posts/posts.module';
   UsersModule,
   MongooseModule.forRoot(process.env.MONGO_URI),
   PostsModule,
+  StoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

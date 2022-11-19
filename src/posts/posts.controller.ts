@@ -6,9 +6,6 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { get } from 'http';
-import { REQUEST } from '@nestjs/core';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
@@ -56,7 +53,7 @@ export class PostsController {
   
   @Get(':id')
   findOne(@Request() req ,@Param('id') id: string) {
-    return this.postsService.findOnePost(req.user.username, id);
+    return this.postsService.findPost(req.user.userId, id);
   }
 
   
@@ -85,9 +82,12 @@ export class PostsController {
   }
 
   @Get('likes/:id')
-  async postLikesNumber(@Param('id') id: string) {
-    const post = await  this.postsService.findPost(id);
-    return post.likes.length
+  async postLikesNumber(@Request() req , @Param('id') id: string) {
+    const post = await  this.postsService.findPost(req.user.userId, id);
+    if(post){
+      return post.likes.length
+    }
+    return 'be in post dastresi nadari'
   }
 
   //comments ............................................
