@@ -23,13 +23,12 @@ export class PostsService {
 
   }
 
-  async findAll(username: string) {
-    const userPosts = await this.usersService.findUserPosts(username)    
+  async findAll(userId: string) {
+    const userPosts = await this.usersService.findUserPosts(userId)    
     return userPosts
   }
   async findPost( userId: string, id: string) {
     const post = await this.postModel.findOne({_id: id})
-    this.usersService.userAccess(userId, post.author._id)
     if(await this.usersService.userAccess(userId, post.author._id)){           
       return post
     }
@@ -170,13 +169,13 @@ export class PostsService {
     }
   }
 
-  async deleteCommentOfPosts(id: string,commentId: string, userId: string){
+  async deleteCommentOfPosts(commentId: string, userId: string){
     try {
-      const post = await this.postModel.findOne({_id: id})
-      
-      if(await this.usersService.userAccess(userId, post.author._id)){
+      const post = await this.postModel.findOne({"comments._id": commentId})
+      console.log(post)
+      if(userId == post.author._id){
         return await this.postModel.updateOne(
-          {_id: id},
+          {_id: post._id},
           {
             $pull: {
               'comments': { _id: commentId}
@@ -185,7 +184,7 @@ export class PostsService {
         )
       }
       return await this.postModel.updateOne(
-        {_id: id},
+        {_id: post._id},
         {
           $pull: {
             'comments': {author: userId, _id: commentId}

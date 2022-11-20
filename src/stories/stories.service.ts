@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UsersService } from 'src/users/users.service';
@@ -25,8 +25,12 @@ export class StoriesService {
     return this.usersService.findUserStories(userId)
   }
 
-  findOne(userId: string, id: string) {
-    return this.usersService.findUserStories(userId, id)
+  async findStory( userId: string, id: string) {
+    const story = await this.storyModel.findOne({_id: id})
+    if(await this.usersService.userAccess(userId, story.author._id)){           
+      return story
+    }
+    throw new HttpException('be in post dastresi nadari', HttpStatus.FORBIDDEN);
   }
 
   async getStoriesOfFollowing(userId: string){    
