@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { createUserDto } from './dto/user.dto';
@@ -53,17 +53,17 @@ export class UsersService {
 
 
 
-  async findUserPosts(username: string, id? : string){
+  async findUserPosts(userId: string, id? : string){
     if(id){
       console.log(id);
       
-      const user = await this.UserModel.findOne({username: username}).populate({
+      const user = await this.UserModel.findOne({_Id: userId}).populate({
         path: 'posts',
         match: { _id: id },
       })
       return user.posts
     }
-    const users = await this.UserModel.findOne({username: username}).populate('posts');
+    const users = await this.UserModel.findOne({_Id: userId}).populate('posts');
     return users.posts
   }
 
@@ -123,12 +123,10 @@ export class UsersService {
 
   //follow and unfollow ..............................................
   async follow(userId: string , id: string){
-    try {
       const userToFollow = await this.UserModel.findOne({_id: id})
       const user = await this.UserModel.findOne({_id: userId})
-      console.log(user, userToFollow);
       
-      if(user && userToFollow){
+      if(user && userToFollow && !user.following.includes(id) && !user.followingRequests.includes(id)){
         if(userToFollow.status == 'Public'){
           userToFollow.followers.push(userId)
           user.following.push(id)
@@ -143,11 +141,8 @@ export class UsersService {
           await user.save()
           return `request sent to user with ${userToFollow.username} id`
         }
-      } return 'no such user'
-      
-    } catch (error) {
-      throw new Error(error.message)
-    }
+      } 
+      throw new HttpException('follow request error', HttpStatus.FORBIDDEN);
   }
   async unfollow(userId: string , id: string){
     try {
@@ -201,31 +196,36 @@ export class UsersService {
 
   async followAccept(userId: string, id: string){
     try {
-      const updatedUserFollowers = await this.UserModel.updateOne(
-        {_id: userId},
-        {
-          $pull: {
-            'followRequests': id
-          },
-          $push: {
-            'followers': id
+      const user = await this.UserModel.findOne({_id: userId})
+      if(user.followRequests.includes(id)){
+        const updatedUserFollowers = await this.UserModel.updateOne(
+          {_id: userId},
+          {
+            $pull: {
+              'followRequests': id
+            },
+            $push: {
+              'followers': id
+            }
           }
-        }
-      )
-      await this.UserModel.updateOne(
-        {_id: id},
-        {
-          $pull: {
-            'followingRequests': userId
-          },
-          $push: {
-            'following': userId
+        )
+        await this.UserModel.updateOne(
+          {_id: id},
+          {
+            $pull: {
+              'followingRequests': userId
+            },
+            $push: {
+              'following': userId
+            }
           }
-        }
-      )
-      return updatedUserFollowers
+        )
+        return updatedUserFollowers
+      }
+      throw new HttpException('error accepting follow request', HttpStatus.BAD_REQUEST)
+
     } catch (error) {
-      throw new Error(error.message)
+      throw new HttpException('error accepting follow request', HttpStatus.BAD_REQUEST)
     }
   }
 
