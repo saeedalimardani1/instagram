@@ -5,8 +5,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-
+@ApiTags('stories')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('stories')
 export class StoriesController {
@@ -50,9 +52,8 @@ export class StoriesController {
 
   @Get(':id')
   findOne(@Request() req, @Param('id') id: string) {
-    return this.storiesService.findOne(req.user.userId, id);
+    return this.storiesService.findStory(req.user.userId, id);
   }
-
 
   @Delete(':id')
   remove(@Request() req, @Param('id') id: string) {
