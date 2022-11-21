@@ -14,13 +14,22 @@ export const UserSchema = new mongoose.Schema({
     description: String,
     photo: String,
     age: Number,
-    stories: String,
     status: {
         type: String,
         enum: ['Public', 'Private'],
         default: 'Public'
     },
     
+    followRequests: [{
+      type: mongoose.SchemaTypes.ObjectId,
+      ref:'User'
+    }],
+
+    followingRequests: [{
+      type: mongoose.SchemaTypes.ObjectId,
+      ref:'User'
+    }],
+
     savedPosts: [{
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'Post'
@@ -41,6 +50,12 @@ export const UserSchema = new mongoose.Schema({
 
   UserSchema.virtual('posts', {
     ref: 'Post',
+    localField: '_id',
+    foreignField: 'author'
+  })
+
+  UserSchema.virtual('stories', {
+    ref: 'Story',
     localField: '_id',
     foreignField: 'author'
   })
